@@ -5,11 +5,16 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import {
   CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ChevronLeftIcon,
   CopyIcon,
   MapIcon,
   GripVerticalIcon,
   Trash2Icon,
+  PaletteIcon,
+  MoonIcon,
+  SunIcon,
 } from 'lucide-react'
 
 import {
@@ -34,6 +39,7 @@ import {
   deleteStep,
   reorderSteps,
   toggleTourActive,
+  updateTourCustomization,
   updateStep,
 } from '@/app/actions/tours'
 import { ScriptKey } from '@/components/dashboard/script-key'
@@ -68,6 +74,20 @@ const SELECT_INPUT =
   'flex h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 dark:bg-input/30'
 
 const ACCENT = '#F15025'
+const APPEARANCE_COLORS = ['#F15025', '#6366f1', '#22c55e', '#3b82f6', '#ec4899', '#f59e0b']
+const FONT_OPTIONS = [
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Geist', label: 'Geist' },
+  { value: 'System', label: 'System UI' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Poppins', label: 'Poppins' },
+]
+const RADIUS_OPTIONS = [
+  { value: '4px', label: 'Sharp' },
+  { value: '10px', label: 'Default' },
+  { value: '16px', label: 'Rounded' },
+  { value: '24px', label: 'Pill' },
+]
 
 function buildInstallSnippet(scriptKey) {
   return `<script 
@@ -122,7 +142,7 @@ function normalizeStep(s) {
   }
 }
 
-export function TourEditor({ project, tour, initialSteps }) {
+export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [actionError, setActionError] = useState(null)
@@ -139,10 +159,26 @@ export function TourEditor({ project, tour, initialSteps }) {
 
   const [tourActive, setTourActive] = useState(Boolean(tour.is_active))
   const [addFormKey, setAddFormKey] = useState(0)
+  const [appearanceOpen, setAppearanceOpen] = useState(false)
+  const [appearanceState, setAppearanceState] = useState({
+    primary_color: tour.primary_color || '#F15025',
+    font_family: tour.font_family || 'Inter',
+    border_radius: tour.border_radius || '10px',
+    theme: tour.theme || 'dark',
+  })
+  const [appearanceFeedback, setAppearanceFeedback] = useState({ ok: false, error: null })
 
   useEffect(() => {
     setTourActive(Boolean(tour.is_active))
   }, [tour.is_active])
+  useEffect(() => {
+    setAppearanceState({
+      primary_color: tour.primary_color || '#F15025',
+      font_family: tour.font_family || 'Inter',
+      border_radius: tour.border_radius || '10px',
+      theme: tour.theme || 'dark',
+    })
+  }, [tour.primary_color, tour.font_family, tour.border_radius, tour.theme])
 
   useEffect(() => {
     setSteps(initialSorted)
@@ -305,7 +341,13 @@ export function TourEditor({ project, tour, initialSteps }) {
             <p className="text-sm text-muted-foreground">{project.domain}</p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-3 rounded-lg border border-border/50 bg-muted/40 px-3 py-2.5">
+          <div className="flex shrink-0 items-center gap-3">
+            {analyticsHref ? (
+              <Button variant="outline" size="sm" asChild className="border-white/10 bg-background/20 hover:bg-muted/20">
+                <Link href={analyticsHref}>View Analytics</Link>
+              </Button>
+            ) : null}
+            <div className="flex shrink-0 items-center gap-3 rounded-lg border border-border/50 bg-muted/40 px-3 py-2.5">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-medium text-muted-foreground">Tour visible on site</span>
               <span className="text-[0.68rem] text-muted-foreground/90">
@@ -319,6 +361,143 @@ export function TourEditor({ project, tour, initialSteps }) {
               aria-label={tourActive ? 'Tour active' : 'Tour inactive'}
             />
           </div>
+          </div>
+        </div>
+
+        <Separator className="bg-border/60" />
+
+        <div className="rounded-lg border border-border/60 bg-muted/20">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+            onClick={() => setAppearanceOpen((v) => !v)}>
+            <div className="flex items-center gap-2">
+              <PaletteIcon className="size-4 text-primary" aria-hidden />
+              <div>
+                <div className="text-sm font-medium text-foreground">Appearance</div>
+                <div className="text-xs text-muted-foreground">Customize tooltip look and theme</div>
+              </div>
+            </div>
+            {appearanceOpen ? <ChevronUpIcon className="size-4 text-muted-foreground" /> : <ChevronDownIcon className="size-4 text-muted-foreground" />}
+          </button>
+          {appearanceOpen ? (
+            <div className="border-t border-border/60 px-4 py-4">
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-2">
+                  <Label>Theme</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={`justify-start gap-2 ${appearanceState.theme === 'dark' ? 'border-[#F15025]/60 bg-[#F15025]/10 text-[#F15025]' : 'border-white/10 bg-background/20 hover:bg-muted/20'}`}
+                      onClick={() => setAppearanceState((s) => ({ ...s, theme: 'dark' }))}>
+                      <MoonIcon className="size-4" />
+                      Dark
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={`justify-start gap-2 ${appearanceState.theme === 'light' ? 'border-[#F15025]/60 bg-[#F15025]/10 text-[#F15025]' : 'border-white/10 bg-background/20 hover:bg-muted/20'}`}
+                      onClick={() => setAppearanceState((s) => ({ ...s, theme: 'light' }))}>
+                      <SunIcon className="size-4" />
+                      Light
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Primary color</Label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {APPEARANCE_COLORS.map((color) => {
+                      const selected = appearanceState.primary_color.toLowerCase() === color.toLowerCase()
+                      return (
+                        <button
+                          key={color}
+                          type="button"
+                          aria-label={`Set color ${color}`}
+                          onClick={() => setAppearanceState((s) => ({ ...s, primary_color: color }))}
+                          className={`size-7 rounded-full border ${selected ? 'ring-2 ring-white ring-offset-1 ring-offset-background' : ''}`}
+                          style={{ backgroundColor: color, borderColor: 'rgba(255,255,255,0.2)' }}
+                        />
+                      )
+                    })}
+                    <Input
+                      value={appearanceState.primary_color}
+                      onChange={(e) => setAppearanceState((s) => ({ ...s, primary_color: e.target.value }))}
+                      className="h-9 w-28"
+                      spellCheck={false}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Font family</Label>
+                  <select
+                    className={SELECT_INPUT}
+                    value={appearanceState.font_family}
+                    onChange={(e) => setAppearanceState((s) => ({ ...s, font_family: e.target.value }))}>
+                    {FONT_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Corner style</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {RADIUS_OPTIONS.map((r) => (
+                      <button
+                        key={r.value}
+                        type="button"
+                        onClick={() => setAppearanceState((s) => ({ ...s, border_radius: r.value }))}
+                        className={`rounded-lg border px-3 py-2 text-left text-sm ${
+                          appearanceState.border_radius === r.value
+                            ? 'border-[#F15025]/60 bg-[#F15025]/10 text-[#F15025]'
+                            : 'border-white/10 bg-background/20 text-foreground hover:bg-muted/20'
+                        }`}>
+                        <div className="font-medium">{r.label}</div>
+                        <div className="mt-1 h-4 w-10 border border-white/20" style={{ borderRadius: r.value }} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  className="w-full"
+                  disabled={isPending}
+                  onClick={() => {
+                    setAppearanceFeedback({ ok: false, error: null })
+                    startTransition(async () => {
+                      const res = await updateTourCustomization(tour.id, appearanceState)
+                      if (!res?.ok) {
+                        setAppearanceFeedback({ ok: false, error: res?.error || 'Could not save appearance.' })
+                        return
+                      }
+                      setAppearanceFeedback({ ok: true, error: null })
+                      router.refresh()
+                    })
+                  }}>
+                  {isPending ? 'Saving…' : 'Save appearance'}
+                </Button>
+
+                {appearanceFeedback.ok ? (
+                  <Alert className="border-white/10 bg-background/10">
+                    <AlertTitle>Appearance updated</AlertTitle>
+                    <AlertDescription>Your tooltip style has been saved.</AlertDescription>
+                  </Alert>
+                ) : null}
+                {appearanceFeedback.error ? (
+                  <Alert variant="destructive" className="border-destructive/50">
+                    <AlertTitle>Couldn’t save appearance</AlertTitle>
+                    <AlertDescription>{appearanceFeedback.error}</AlertDescription>
+                  </Alert>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <Separator className="bg-border/60" />
@@ -495,6 +674,7 @@ export function TourEditor({ project, tour, initialSteps }) {
               position={previewData.position}
               stepNumber={previewStepNumber}
               totalSteps={previewTotalSteps}
+              customization={appearanceState}
               onPositionChange={(pos) => {
                 if (panelMode === 'edit') setEditDraft((s) => ({ ...s, position: pos }))
                 else setDraft((s) => ({ ...s, position: pos }))

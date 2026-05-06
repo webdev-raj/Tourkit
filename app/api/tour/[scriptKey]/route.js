@@ -35,7 +35,7 @@ export async function GET(_request, { params }) {
 
   const { data: tour, error: tourError } = await supabase
     .from('tours')
-    .select('id, name, is_active')
+    .select('id, name, is_active, primary_color, font_family, border_radius, theme')
     .eq('project_id', project.id)
     .eq('is_active', true)
     .order('created_at', { ascending: true })
@@ -48,7 +48,19 @@ export async function GET(_request, { params }) {
 
   if (!tour) {
     return NextResponse.json(
-      { projectId: project.id, is_active: true, tour: null, steps: [] },
+      {
+        projectId: project.id,
+        is_active: true,
+        tour: null,
+        steps: [],
+        api_base: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        customization: {
+          primary_color: '#F15025',
+          font_family: 'Inter',
+          border_radius: '10px',
+          theme: 'dark',
+        },
+      },
       { status: 200, headers: corsHeaders() }
     )
   }
@@ -69,6 +81,13 @@ export async function GET(_request, { params }) {
       is_active: true,
       tour: { id: tour.id, name: tour.name, is_active: tour.is_active },
       steps: steps ?? [],
+      api_base: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      customization: {
+        primary_color: tour.primary_color || '#F15025',
+        font_family: tour.font_family || 'Inter',
+        border_radius: tour.border_radius || '10px',
+        theme: tour.theme || 'dark',
+      },
     },
     { status: 200, headers: corsHeaders() }
   )

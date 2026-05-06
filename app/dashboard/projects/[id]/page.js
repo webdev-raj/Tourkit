@@ -62,7 +62,14 @@ async function TourEditorGate({ projectId }) {
     return <LoadErrorCard message={stepsRes.error} />
   }
 
-  return <TourEditor project={project} tour={tourRes.data} initialSteps={stepsRes.data} />
+  return (
+    <TourEditor
+      project={project}
+      tour={tourRes.data}
+      initialSteps={stepsRes.data}
+      analyticsHref={`/dashboard/projects/${project.id}/analytics`}
+    />
+  )
 }
 
 function LoadErrorCard({ message, hint }) {

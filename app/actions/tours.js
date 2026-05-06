@@ -5,6 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 const POSITIONS = new Set(['top', 'bottom', 'left', 'right'])
+const TOUR_THEMES = new Set(['dark', 'light'])
+const TOUR_FONTS = new Set(['Inter', 'Geist', 'System', 'Roboto', 'Poppins'])
+const TOUR_RADII = new Set(['4px', '8px', '10px', '16px', '24px'])
 
 function formatDbError(error) {
   const msg = String(error?.message ?? '')
@@ -70,23 +73,55 @@ export async function getTourByProjectId(projectId) {
     return { data: null, error: 'Project not found or you do not have access.' }
   }
 
-  const { data: existing, error: fetchError } = await supabase
+  let { data: existing, error: fetchError } = await supabase
     .from('tours')
-    .select('id, project_id, name, is_active, created_at')
+    .select('id, project_id, name, is_active, primary_color, font_family, border_radius, theme, created_at')
     .eq('project_id', projectId)
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle()
+
+  const missingCustomizationColumns =
+    fetchError &&
+    String(fetchError.message || '').toLowerCase().includes('column') &&
+    (
+      String(fetchError.message || '').toLowerCase().includes('primary_color') ||
+      String(fetchError.message || '').toLowerCase().includes('font_family') ||
+      String(fetchError.message || '').toLowerCase().includes('border_radius') ||
+      String(fetchError.message || '').toLowerCase().includes('theme')
+    )
+
+  if (missingCustomizationColumns) {
+    const fallback = await supabase
+      .from('tours')
+      .select('id, project_id, name, is_active, created_at')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    existing = fallback.data
+    fetchError = fallback.error
+  }
 
   if (fetchError) {
     return { data: null, error: formatDbError(fetchError) }
   }
 
   if (existing) {
-    return { data: existing, error: null }
+    return {
+      data: {
+        ...existing,
+        primary_color: existing.primary_color || '#F15025',
+        font_family: existing.font_family || 'Inter',
+        border_radius: existing.border_radius || '10px',
+        theme: existing.theme || 'dark',
+      },
+      error: null,
+    }
   }
 
-  const { data: inserted, error: insertError } = await supabase
+  const { data: insertedBase, error: insertError } = await supabase
     .from('tours')
     .insert({ project_id: projectId, name: 'Default Tour', is_active: true })
     .select('id, project_id, name, is_active, created_at')
@@ -97,7 +132,16 @@ export async function getTourByProjectId(projectId) {
   }
 
   revalidateProjectPage(projectId)
-  return { data: inserted, error: null }
+  return {
+    data: {
+      ...insertedBase,
+      primary_color: '#F15025',
+      font_family: 'Inter',
+      border_radius: '10px',
+      theme: 'dark',
+    },
+    error: null,
+  }
 }
 
 export async function getStepsByTourId(tourId) {
@@ -319,5 +363,81 @@ export async function toggleTourActive(tourId, isActive) {
   const projectId = await resolveProjectIdFromTourId(supabase, tourId)
   revalidateProjectPage(projectId)
 
+  return { ok: true }
+}
+
+function isValidHexColor(value) {
+  return /^#[0-9a-fA-F]{6}$/.test(String(value || '').trim())
+}
+
+export async function updateTourCustomization(tourId, data) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { ok: false, error: 'You must be signed in.' }
+  }
+
+  const primaryColor = String(data?.primary_color ?? '').trim()
+  const fontFamily = String(data?.font_family ?? '').trim()
+  const borderRadius = String(data?.border_radius ?? '').trim()
+  const theme = String(data?.theme ?? '').trim().toLowerCase()
+
+  if (!isValidHexColor(primaryColor)) {
+    return { ok: false, error: 'Primary color must be a valid hex color like #F15025.' }
+  }
+  if (!TOUR_FONTS.has(fontFamily)) {
+    return { ok: false, error: 'Invalid font family selected.' }
+  }
+  if (!TOUR_RADII.has(borderRadius)) {
+    return { ok: false, error: 'Invalid border radius selected.' }
+  }
+  if (!TOUR_THEMES.has(theme)) {
+    return { ok: false, error: 'Invalid theme selected.' }
+  }
+
+  const { error } = await supabase
+    .from('tours')
+    .update({
+      primary_color: primaryColor,
+      font_family: fontFamily,
+      border_radius: borderRadius,
+      theme,
+    })
+    .eq('id', tourId)
+
+  if (error) {
+    const msg = String(error?.message ?? '')
+    const lower = msg.toLowerCase()
+    const missingCustomizationColumns =
+      lower.includes('column') &&
+      (
+        lower.includes('primary_color') ||
+        lower.includes('font_family') ||
+        lower.includes('border_radius') ||
+        lower.includes('theme')
+      )
+
+    if (missingCustomizationColumns) {
+      return {
+        ok: false,
+        error:
+          'Customization columns are missing in your Supabase `tours` table. Run this in SQL Editor:\n' +
+          "alter table tours add column if not exists primary_color text default '#F15025', " +
+          "add column if not exists font_family text default 'Inter', " +
+          "add column if not exists border_radius text default '10px', " +
+          "add column if not exists theme text default 'dark';",
+      }
+    }
+
+    return { ok: false, error: msg || formatDbError(error) }
+  }
+
+  const projectId = await resolveProjectIdFromTourId(supabase, tourId)
+  revalidateProjectPage(projectId)
   return { ok: true }
 }

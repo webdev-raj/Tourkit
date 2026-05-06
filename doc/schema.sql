@@ -20,6 +20,10 @@ create table if not exists tours (
   project_id uuid references projects(id) on delete cascade,
   name text default 'Default Tour',
   is_active boolean default true,
+  primary_color text default '#F15025',
+  font_family text default 'Inter',
+  border_radius text default '10px',
+  theme text default 'dark',
   created_at timestamptz default now()
 );
 
