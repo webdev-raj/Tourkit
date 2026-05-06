@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 
 import { signOut } from '@/app/actions/auth'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
+import { DashboardBreadcrumb } from '@/components/dashboard/dashboard-breadcrumb'
 import { UserMenu } from '@/components/dashboard/user-menu'
 import { createClient } from '@/lib/supabase/server'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -25,11 +27,10 @@ export default async function DashboardLayout({ children }) {
       <AppSidebar userEmail={user.email} onSignOut={signOut} />
       <SidebarInset>
         <div className="flex min-h-dvh min-w-0 flex-col bg-background">
-          <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/90 px-4 py-3 backdrop-blur-md sm:px-6">
-            <div className="min-w-0">
-              <div className="text-sm font-semibold leading-none tracking-tight">TourKit</div>
-              <div className="mt-1 text-xs text-muted-foreground">Projects &amp; script keys</div>
-            </div>
+          <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-background/90 px-4 py-3 backdrop-blur-md sm:px-6">
+            <Suspense fallback={<div className="h-5 w-56 rounded-md bg-muted/30" />}>
+              <DashboardBreadcrumb />
+            </Suspense>
             <UserMenu email={user.email} onSignOut={signOut} />
           </header>
           <div

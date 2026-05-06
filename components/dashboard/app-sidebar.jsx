@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutGridIcon, LogOutIcon } from "lucide-react"
+import { LayoutGridIcon, LogOutIcon, Settings } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,17 +20,23 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
-const navItems = [{ href: "/dashboard", label: "Projects", icon: LayoutGridIcon }]
+const navItems = [
+  { href: "/dashboard", label: "Projects", icon: LayoutGridIcon },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+]
 
 export function AppSidebar({ userEmail, onSignOut }) {
   const pathname = usePathname()
 
   return (
     <Sidebar collapsible="offcanvas">
-      <SidebarHeader className="flex flex-row items-center justify-between gap-2">
+      <SidebarHeader className="flex flex-row items-center justify-between gap-2 px-3 py-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold leading-none">TourKit</div>
-          <div className="mt-1 truncate text-xs text-muted-foreground">{userEmail}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-semibold leading-none tracking-tight">TourKit</div>
+            <span className="inline-flex size-1.5 rounded-full bg-primary" aria-hidden />
+          </div>
+          <div className="mt-1 text-[0.7rem] text-muted-foreground">Dashboard</div>
         </div>
         <SidebarTrigger />
       </SidebarHeader>
@@ -66,8 +72,13 @@ export function AppSidebar({ userEmail, onSignOut }) {
       <SidebarSeparator />
 
       <SidebarFooter className="gap-3 border-t border-sidebar-border p-4">
+        <div className="truncate text-xs text-muted-foreground">{userEmail}</div>
         <form action={onSignOut} className="w-full">
-          <Button type="submit" variant="outline" size="sm" className="h-10 w-full justify-center gap-2 border-sidebar-border bg-sidebar-accent/30 text-sidebar-accent-foreground hover:bg-sidebar-accent/50">
+          <Button
+            type="submit"
+            variant="outline"
+            size="sm"
+            className="h-10 w-full justify-center gap-2 rounded-xl border-sidebar-border bg-background/20 text-sidebar-accent-foreground hover:bg-sidebar-accent/40">
             <LogOutIcon className="size-4 shrink-0" aria-hidden />
             Sign out
           </Button>
