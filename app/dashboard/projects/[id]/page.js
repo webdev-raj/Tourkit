@@ -9,7 +9,6 @@ import { TourEditorSkeleton } from '@/components/dashboard/tour-editor-skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -129,9 +128,9 @@ async function TourEditorGate({ projectId, deleteError }) {
               <form action={deleteProjectAction}>
                 <AlertDialogFooter>
                   <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-                  <AlertDialogAction type="submit" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  <Button type="submit" variant="destructive">
                     Delete project
-                  </AlertDialogAction>
+                  </Button>
                 </AlertDialogFooter>
               </form>
             </AlertDialogContent>
