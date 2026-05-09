@@ -223,8 +223,8 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
     })
   }
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [stepToDelete, setStepToDelete] = useState(null)
+  const [selectorError, setSelectorError] = useState('')
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -258,12 +258,26 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
     })
   }
 
+  function validateSelector(value) {
+    if (!value || !value.trim()) {
+      setSelectorError('Selector is required')
+      return false
+    }
+    try {
+      document.querySelector(value)
+      setSelectorError('')
+      return true
+    } catch (_) {
+      setSelectorError('Invalid CSS selector')
+      return false
+    }
+  }
+
   const confirmDelete = () => {
-    const stepId = pendingDeleteId
+    const stepId = stepToDelete
     if (!stepId) return
 
-    setDeleteDialogOpen(false)
-    setPendingDeleteId(null)
+    setStepToDelete(null)
 
     runAction(async () => deleteStep(stepId))
     if (selectedId === stepId) {
@@ -519,19 +533,23 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
             <CardDescription>Order matches how the tour runs on your site.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialog
+              open={stepToDelete !== null}
+              onOpenChange={(open) => {
+                if (!open) setStepToDelete(null)
+              }}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete step?</AlertDialogTitle>
+                  <AlertDialogTitle>Delete this step?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete the step. This action cannot be undone.
+                    This step will be permanently removed from your tour. This cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel type="button" onClick={() => setPendingDeleteId(null)}>
+                  <AlertDialogCancel type="button" onClick={() => setStepToDelete(null)}>
                     Cancel
                   </AlertDialogCancel>
-                  <AlertDialogAction type="button" onClick={confirmDelete}>
+                  <AlertDialogAction type="button" className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDelete}>
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -564,8 +582,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
                       isSelected={selectedId === step.id && panelMode === 'edit'}
                       onSelect={() => openEditForStep(step.id)}
                       onDelete={() => {
-                        setPendingDeleteId(step.id)
-                        setDeleteDialogOpen(true)
+                        setStepToDelete(step.id)
                       }}
                     />
                   ))}
@@ -606,12 +623,15 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
                 disabled={isPending}
                 draft={editDraft}
                 onDraftChange={setEditDraft}
+                selectorError={selectorError}
+                onSelectorBlur={validateSelector}
                 onCancel={() => {
                   setActionError(null)
                   setPanelMode('add')
                   setSelectedId(null)
                 }}
                 onSave={() => {
+                  if (!validateSelector(editDraft.selector)) return
                   setActionError(null)
                   startTransition(async () => {
                     const result = await updateStep(selected.id, editDraft)
@@ -633,7 +653,10 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
                 disabled={isPending}
                 draft={draft}
                 onDraftChange={setDraft}
+                selectorError={selectorError}
+                onSelectorBlur={validateSelector}
                 onAdd={() => {
+                  if (!validateSelector(draft.selector)) return
                   setActionError(null)
                   startTransition(async () => {
                     const result = await createStep(tour.id, draft)
@@ -762,7 +785,7 @@ function SortableStepCard({ step, index, disabled, isSelected, onSelect, onDelet
   )
 }
 
-function StepFields({ value, onChange, disabled }) {
+function StepFields({ value, onChange, disabled, selectorError, onSelectorBlur }) {
   return (
     <>
       <div className="flex flex-col gap-2">
@@ -799,7 +822,13 @@ function StepFields({ value, onChange, disabled }) {
           spellCheck={false}
           autoComplete="off"
           onChange={(e) => onChange({ ...value, selector: e.target.value })}
+          onBlur={(e) => onSelectorBlur(e.target.value)}
         />
+        {selectorError && (
+          <p className="mt-1 text-xs text-red-500">
+            {selectorError}
+          </p>
+        )}
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="step-position">Position</Label>
@@ -820,10 +849,10 @@ function StepFields({ value, onChange, disabled }) {
   )
 }
 
-function AddStepForm({ disabled, draft, onDraftChange, onAdd }) {
+function AddStepForm({ disabled, draft, onDraftChange, onAdd, selectorError, onSelectorBlur }) {
   return (
     <div className="flex flex-col gap-4">
-      <StepFields value={draft} onChange={onDraftChange} disabled={disabled} />
+      <StepFields value={draft} onChange={onDraftChange} disabled={disabled} selectorError={selectorError} onSelectorBlur={onSelectorBlur} />
       <div className="flex justify-end">
         <Button type="button" disabled={disabled} onClick={onAdd}>
           {disabled ? 'Adding…' : 'Add step'}
@@ -833,10 +862,10 @@ function AddStepForm({ disabled, draft, onDraftChange, onAdd }) {
   )
 }
 
-function EditStepForm({ disabled, draft, onDraftChange, onSave, onCancel }) {
+function EditStepForm({ disabled, draft, onDraftChange, onSave, onCancel, selectorError, onSelectorBlur }) {
   return (
     <div className="flex flex-col gap-4">
-      <StepFields value={draft} onChange={onDraftChange} disabled={disabled} />
+      <StepFields value={draft} onChange={onDraftChange} disabled={disabled} selectorError={selectorError} onSelectorBlur={onSelectorBlur} />
       <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="outline" disabled={disabled} onClick={onCancel}>
           Cancel

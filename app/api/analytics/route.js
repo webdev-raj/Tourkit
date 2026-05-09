@@ -15,18 +15,22 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() })
 }
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    let body = {}
+    let script_key = ''
+    let event_type = ''
+    let step_order = null
+    let session_id = null
     try {
-      body = await request.json()
+      ;({ script_key, event_type, step_order, session_id } = await req.json())
     } catch {
-      body = {}
+      /* fail silently */
     }
 
-    const scriptKey = typeof body.script_key === 'string' ? body.script_key.trim() : ''
-    const eventType = typeof body.event_type === 'string' ? body.event_type.trim() : ''
-    const rawOrder = body.step_order
+    const scriptKey = typeof script_key === 'string' ? script_key.trim() : ''
+    const eventType = typeof event_type === 'string' ? event_type.trim() : ''
+    const rawOrder = step_order
+    const sessionId = typeof session_id === 'string' && session_id.trim() ? session_id.trim() : null
     const stepOrder =
       rawOrder === null || rawOrder === undefined || rawOrder === ''
         ? null
@@ -48,7 +52,7 @@ export async function POST(request) {
             project_id: project.id,
             event_type: eventType,
             step_order: stepOrder,
-            session_id: null,
+            session_id: sessionId,
           })
         }
       } catch {

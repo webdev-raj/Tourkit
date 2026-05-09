@@ -58,3 +58,39 @@ export async function createProject(prevState, formData) {
   return { ok: true }
 }
 
+export async function deleteProject(projectId) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return { ok: false, error: 'Not found' }
+  }
+
+  const normalizedId = String(projectId || '').trim()
+  if (!normalizedId) {
+    return { ok: false, error: 'Not found' }
+  }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id, user_id')
+    .eq('id', normalizedId)
+    .maybeSingle()
+
+  if (!project || project.user_id !== user.id) {
+    return { ok: false, error: 'Not found' }
+  }
+
+  const { error } = await supabase.from('projects').delete().eq('id', normalizedId)
+  if (error) {
+    return { ok: false, error: error.message || 'Could not delete project.' }
+  }
+
+  revalidatePath('/dashboard')
+  return { ok: true }
+}
+
