@@ -11,12 +11,25 @@ function resolvePlanFromName(name) {
   return 'starter'
 }
 
-async function findUserByEmail(adminSupabase, email) {
-  if (!email) return null
+async function findUserByEmail(adminSupabase, customerEmail) {
+  if (!customerEmail) return null
   try {
     const { data } = await adminSupabase.auth.admin.listUsers()
     const users = data?.users || []
-    return users.find((u) => String(u.email || '').toLowerCase() === String(email).toLowerCase()) || null
+
+    console.log('Total users found:', users?.length)
+    console.log('Looking for email:', customerEmail)
+    console.log(
+      'Available emails:',
+      users?.map((u) => u.email)
+    )
+
+    const user =
+      users.find((u) => String(u.email || '').toLowerCase() === String(customerEmail).toLowerCase()) || null
+
+    console.log('User match:', user?.email)
+
+    return user
   } catch (_) {
     return null
   }
@@ -41,8 +54,14 @@ export async function POST(req) {
     const eventName = payload?.meta?.event_name
     const customerId = payload?.data?.attributes?.customer_id?.toString?.() || null
     const subscriptionId = payload?.data?.id?.toString?.() || null
-    const customerEmail = payload?.data?.attributes?.user_email || null
+    const customerEmail =
+      payload?.data?.attributes?.user_email ||
+      payload?.data?.attributes?.customer_email ||
+      payload?.meta?.custom_data?.email ||
+      null
     const status = payload?.data?.attributes?.status || 'inactive'
+
+    console.log('Full payload attributes:', JSON.stringify(payload?.data?.attributes, null, 2))
 
     const adminSupabase = createAdminClient()
     const user = await findUserByEmail(adminSupabase, customerEmail)
