@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { AlertTriangleIcon, CheckIcon, CodeIcon, CopyIcon, PencilIcon, UserIcon } from "lucide-react"
+import { AlertTriangleIcon, CheckIcon, CodeIcon, CopyIcon, CreditCardIcon, ExternalLinkIcon, PencilIcon, UserIcon } from "lucide-react"
 
+import { getUserPlanDetails } from "@/app/actions/billing"
 import { deleteAccountAction, sendPasswordResetAction, updateDisplayNameAction } from "@/app/actions/settings"
 import { createClient } from "@/lib/supabase/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -85,6 +87,27 @@ export default function SettingsPage() {
 
   const [email, setEmail] = useState("")
   const [displayName, setDisplayName] = useState("")
+  const [planDetails, setPlanDetails] = useState(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadPlanDetails() {
+      try {
+        const details = await getUserPlanDetails()
+        if (cancelled) return
+        setPlanDetails(details ?? null)
+      } catch {
+        if (!cancelled) setPlanDetails(null)
+      }
+    }
+
+    loadPlanDetails()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -267,7 +290,22 @@ export default function SettingsPage() {
           </Card>
         </div>
 
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card className="rounded-xl border border-white/10 bg-[#111111] p-6">
+            <div className="mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
+              <CreditCardIcon className="size-5 text-primary" aria-hidden />
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">Billing &amp; Plan</h2>
+            </div>
+
+            {planDetails === undefined ? (
+              <p className="text-sm text-muted-foreground">Loading billing…</p>
+            ) : planDetails === null ? (
+              <p className="text-sm text-muted-foreground">Unable to load billing details.</p>
+            ) : (
+              <BillingPlanBody details={planDetails} />
+            )}
+          </Card>
+
           <Card className="rounded-xl border border-red-900/70 bg-card/20">
             <CardHeader className="px-6">
               <CardTitle className="flex items-center gap-2 text-red-300">
@@ -318,6 +356,138 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const LS_MANAGE_URL = "https://app.lemonsqueezy.com/my-orders"
+
+function BillingPlanBody({ details }) {
+  const plan = String(details.plan || "free").toLowerCase()
+  const status = String(details.status || "inactive").toLowerCase()
+  const isCancelled = status === "cancelled"
+  const isActive = status === "active"
+
+  const statusBadge = isActive ? (
+    <span className="rounded-full bg-green-950 px-2 py-1 text-xs text-green-400">Active</span>
+  ) : isCancelled ? (
+    <span className="rounded-full bg-red-950 px-2 py-1 text-xs text-red-400">Cancelled</span>
+  ) : (
+    <span className="rounded-full bg-gray-800 px-2 py-1 text-xs capitalize text-gray-400">{status}</span>
+  )
+
+  function Row({ label, children }) {
+    return (
+      <div className="flex flex-col gap-1 border-b border-white/10 py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <div className="text-sm font-medium text-foreground sm:text-end">{children}</div>
+      </div>
+    )
+  }
+
+  if (plan === "free") {
+    return (
+      <div className="flex flex-col gap-4">
+        {isCancelled ? <CancelledBanner /> : null}
+        <Row label="Current plan">
+          <span className="inline-flex rounded-full bg-gray-800 px-2 py-1 text-xs text-gray-400">Free</span>
+        </Row>
+        <Row label="Limits">
+          <span className="text-foreground">1 project · 500 sessions/month</span>
+        </Row>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Upgrade to get more projects, sessions, and remove TourKit branding.
+        </p>
+        <Button asChild className="w-full rounded-xl bg-[#F15025] text-white hover:bg-[#F15025]/90">
+          <Link href="/pricing">Upgrade to Starter →</Link>
+        </Button>
+        <Link href="/pricing" className="text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+          View all plans →
+        </Link>
+      </div>
+    )
+  }
+
+  if (plan === "starter") {
+    return (
+      <div className="flex flex-col gap-4">
+        {isCancelled ? <CancelledBanner /> : null}
+        <Row label="Current plan">
+          <span className="inline-flex rounded-full bg-blue-950 px-2 py-1 text-xs text-blue-400">Starter</span>
+        </Row>
+        <Row label="Status">{statusBadge}</Row>
+        <Row label="Limits">
+          <span className="text-foreground">3 projects · 2,000 sessions/month</span>
+        </Row>
+        {isActive ? (
+          <Row label="Billing">
+            <span className="text-foreground">$9 / month</span>
+          </Row>
+        ) : null}
+        <Button asChild variant="outline" className="w-full rounded-xl border-white/10 bg-background/20 hover:bg-muted/20">
+          <a href={LS_MANAGE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2">
+            <ExternalLinkIcon className="size-4 shrink-0" aria-hidden />
+            Manage subscription
+          </a>
+        </Button>
+        <p className="text-center text-xs text-muted-foreground">Cancel or change your plan from the Lemon Squeezy customer portal</p>
+      </div>
+    )
+  }
+
+  if (plan === "pro") {
+    return (
+      <div className="flex flex-col gap-4">
+        {isCancelled ? <CancelledBanner /> : null}
+        <Row label="Current plan">
+          <span className="inline-flex items-center gap-1 rounded-full bg-orange-950 px-2 py-1 text-xs text-orange-400">
+            Pro <span aria-hidden>✦</span>
+          </span>
+        </Row>
+        <Row label="Status">{statusBadge}</Row>
+        <Row label="Limits">
+          <span className="text-foreground">Unlimited projects · Unlimited sessions</span>
+        </Row>
+        <Row label="Billing">
+          <span className="text-foreground">$19 / month</span>
+        </Row>
+        <Button asChild variant="outline" className="w-full rounded-xl border-white/10 bg-background/20 hover:bg-muted/20">
+          <a href={LS_MANAGE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2">
+            <ExternalLinkIcon className="size-4 shrink-0" aria-hidden />
+            Manage subscription
+          </a>
+        </Button>
+        <p className="text-center text-xs text-muted-foreground">Cancel or change your plan from the Lemon Squeezy customer portal</p>
+      </div>
+    )
+  }
+
+  return (
+    <p className="text-sm text-muted-foreground">
+      Unsupported plan <span className="font-mono">{plan}</span>. Visit{" "}
+      <Link href="/pricing" className="text-primary underline-offset-4 hover:underline">
+        pricing
+      </Link>
+      .
+    </p>
+  )
+}
+
+function CancelledBanner() {
+  return (
+    <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-4">
+      <div className="flex gap-3">
+        <AlertTriangleIcon className="size-5 shrink-0 text-amber-400" aria-hidden />
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="text-sm font-medium text-amber-100">Your subscription has been cancelled</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            You&apos;ll keep access until the end of your billing period. Resubscribe anytime on /pricing
+          </p>
+          <Button asChild size="sm" variant="outline" className="mt-1 w-full border-amber-500/35 bg-background/30 hover:bg-amber-950/40 sm:w-auto">
+            <Link href="/pricing">Resubscribe</Link>
+          </Button>
         </div>
       </div>
     </div>
