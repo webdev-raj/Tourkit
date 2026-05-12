@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CheckIcon, XIcon } from 'lucide-react'
 
 import { getUserPlan } from '@/app/actions/billing'
+import CheckoutButton from '@/components/pricing/checkout-button'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 
@@ -16,9 +17,6 @@ const plans = [
     price: '$0',
     period: '/ month',
     description: 'Perfect for trying TourKit',
-    cta: 'Get started free',
-    href: '/auth?mode=signup',
-    external: false,
     primary: false,
     features: [
       { ok: true, text: '1 project' },
@@ -35,9 +33,6 @@ const plans = [
     price: '$9',
     period: '/ month',
     description: 'For freelancers and small projects',
-    cta: 'Get Starter',
-    href: process.env.NEXT_PUBLIC_STARTER_CHECKOUT_URL || '#',
-    external: true,
     primary: true,
     features: [
       { ok: true, text: '3 projects' },
@@ -54,9 +49,6 @@ const plans = [
     price: '$19',
     period: '/ month',
     description: 'For growing teams and agencies',
-    cta: 'Get Pro',
-    href: process.env.NEXT_PUBLIC_PRO_CHECKOUT_URL || '#',
-    external: true,
     primary: false,
     features: [
       { ok: true, text: 'Unlimited projects' },
@@ -72,12 +64,95 @@ const plans = [
 
 export const dynamic = 'force-dynamic'
 
+function normalizePlan(plan) {
+  const p = String(plan || 'free').toLowerCase()
+  if (p === 'starter' || p === 'pro') return p
+  return 'free'
+}
+
+function PricingPlanFooter({ item, user, userPlan, starterHref, proHref }) {
+  const normalizedPlan = normalizePlan(userPlan)
+
+  if (item.key === 'free') {
+    if (!user) {
+      return (
+        <Button asChild className="w-full" variant="outline">
+          <Link href="/auth?mode=signup&redirect=/pricing">Get started free</Link>
+        </Button>
+      )
+    }
+    if (normalizedPlan === 'free') {
+      return (
+        <Button disabled className="w-full bg-muted text-muted-foreground">
+          Current plan
+        </Button>
+      )
+    }
+    return (
+      <Button disabled variant="ghost" className="w-full text-muted-foreground opacity-60">
+        Downgrade
+      </Button>
+    )
+  }
+
+  if (item.key === 'starter') {
+    if (normalizedPlan === 'starter') {
+      return (
+        <Button disabled className="w-full border-2 border-emerald-500/50 bg-transparent text-emerald-100">
+          Current plan ✓
+        </Button>
+      )
+    }
+    if (normalizedPlan === 'pro') {
+      return (
+        <Button disabled variant="ghost" className="w-full text-muted-foreground opacity-60">
+          Downgrade to Starter
+        </Button>
+      )
+    }
+    const starterClasses = item.primary
+      ? 'inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-md bg-[#F15025] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#F15025]/90'
+      : 'inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-md border border-white/10 bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/5'
+    return (
+      <CheckoutButton href={starterHref} currentPlan={normalizedPlan} targetPlan="starter" className={starterClasses}>
+        Get Starter
+      </CheckoutButton>
+    )
+  }
+
+  if (item.key === 'pro') {
+    if (normalizedPlan === 'pro') {
+      return (
+        <Button disabled className="w-full border-2 border-emerald-500/50 bg-transparent text-emerald-100">
+          Current plan ✓
+        </Button>
+      )
+    }
+    const isUpgradeFromStarter = normalizedPlan === 'starter'
+    const proClasses = isUpgradeFromStarter
+      ? 'inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-md bg-[#F15025] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#F15025]/90'
+      : 'inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-md border border-white/10 bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/5'
+    return (
+      <CheckoutButton href={proHref} currentPlan={normalizedPlan} targetPlan="pro" className={proClasses}>
+        {isUpgradeFromStarter ? 'Upgrade to Pro' : 'Get Pro'}
+      </CheckoutButton>
+    )
+  }
+
+  return null
+}
+
 export default async function PricingPage() {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const { plan } = await getUserPlan()
+
+  const planData = await getUserPlan().catch(() => ({ plan: 'free' }))
+  const userPlan = planData?.plan || 'free'
+
+  const starterHref = process.env.NEXT_PUBLIC_STARTER_CHECKOUT_URL || '#'
+  const proHref = process.env.NEXT_PUBLIC_PRO_CHECKOUT_URL || '#'
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -107,7 +182,7 @@ export default async function PricingPage() {
           <p className="text-base text-muted-foreground sm:text-lg">Start free. Upgrade when you need more.</p>
           {user ? (
             <div className="inline-flex rounded-full border border-white/10 bg-card/40 px-3 py-1 text-xs text-muted-foreground">
-              Current plan: <span className="ml-1 font-semibold capitalize text-foreground">{plan}</span>
+              Current plan: <span className="ml-1 font-semibold capitalize text-foreground">{normalizePlan(userPlan)}</span>
             </div>
           ) : null}
         </section>
@@ -145,15 +220,7 @@ export default async function PricingPage() {
                 ))}
               </ul>
 
-              <Button asChild className="w-full" variant={item.primary ? 'default' : 'outline'}>
-                <Link
-                  href={item.href}
-                  target={item.external ? '_blank' : undefined}
-                  rel={item.external ? 'noreferrer noopener' : undefined}
-                  className={item.primary ? 'bg-[#F15025] hover:bg-[#F15025]/90' : ''}>
-                  {item.cta}
-                </Link>
-              </Button>
+              <PricingPlanFooter item={item} user={user} userPlan={userPlan} starterHref={starterHref} proHref={proHref} />
             </article>
           ))}
         </section>

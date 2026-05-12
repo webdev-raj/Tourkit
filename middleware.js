@@ -26,18 +26,20 @@ export async function middleware(request) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  const pathname = request.nextUrl.pathname
+
+  // Password recovery page must stay reachable (magic link may establish a session).
+  if (pathname.startsWith('/auth/reset-password')) {
+    return response
+  }
+
+  if (pathname.startsWith('/dashboard') && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
     return NextResponse.redirect(url)
   }
 
-  if (
-    (request.nextUrl.pathname === '/login' ||
-      request.nextUrl.pathname === '/signup' ||
-      request.nextUrl.pathname === '/auth') &&
-    user
-  ) {
+  if ((pathname === '/login' || pathname === '/signup' || pathname === '/auth') && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

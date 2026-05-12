@@ -42,7 +42,12 @@ export async function sendPasswordReset() {
 
   if (userError || !user?.email) return { ok: false, error: 'You must be signed in.' }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(user.email)
+  const base = String(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
+  const redirectTo = `${base}/auth/reset-password`
+
+  const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+    redirectTo,
+  })
 
   if (error) return { ok: false, error: formatError(error) }
   return { ok: true }

@@ -1,14 +1,12 @@
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
-import Link from 'next/link'
-
 import { signOut } from '@/app/actions/auth'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { DashboardBreadcrumb } from '@/components/dashboard/dashboard-breadcrumb'
+import { PasswordUpdatedBanner } from '@/components/dashboard/password-updated-banner'
 import { UserMenu } from '@/components/dashboard/user-menu'
 import { createClient } from '@/lib/supabase/server'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { Button } from '@/components/ui/button'
 
 export const metadata = {
   title: 'Dashboard — TourKit',
@@ -33,18 +31,16 @@ export default async function DashboardLayout({ children }) {
             <Suspense fallback={<div className="h-5 w-56 rounded-md bg-muted/30" />}>
               <DashboardBreadcrumb />
             </Suspense>
-            <div className="flex items-center gap-2">
-              <Button asChild size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground">
-                <Link href="/pricing">Pricing</Link>
-              </Button>
-              <UserMenu email={user.email} onSignOut={signOut} />
-            </div>
+            <UserMenu email={user.email} onSignOut={signOut} />
           </header>
           <div
             id="main-content"
             className="flex-1 px-4 py-6 pb-10 sm:px-6 lg:py-10"
             tabIndex={-1}>
-            <div className="mx-auto w-full max-w-6xl">{children}</div>
+            <div className="mx-auto w-full max-w-6xl">
+              <PasswordUpdatedBanner />
+              {children}
+            </div>
           </div>
         </div>
       </SidebarInset>

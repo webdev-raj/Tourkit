@@ -12,9 +12,28 @@ export async function generateMetadata({ searchParams }) {
   }
 }
 
+function sanitizeRedirect(raw) {
+  if (typeof raw !== "string") return "/dashboard"
+  const s = raw.trim()
+  if (!s.startsWith("/") || s.startsWith("//")) return "/dashboard"
+  return s
+}
+
+function buildAuthHref(mode, redirectPath) {
+  const params = new URLSearchParams()
+  if (mode === "signup") params.set("mode", "signup")
+  if (redirectPath && redirectPath !== "/dashboard") params.set("redirect", redirectPath)
+  const qs = params.toString()
+  return qs ? `/auth?${qs}` : "/auth"
+}
+
 export default async function AuthPage({ searchParams }) {
   const sp = await searchParams
   const mode = sp?.mode === "signup" ? "signup" : "login"
+  const redirectPath = sanitizeRedirect(sp?.redirect)
+
+  const loginHref = buildAuthHref("login", redirectPath)
+  const signupHref = buildAuthHref("signup", redirectPath)
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-background">
@@ -55,30 +74,26 @@ export default async function AuthPage({ searchParams }) {
                 Account
               </p>
               <div className="flex rounded-lg border border-border/80 bg-muted/30 p-1" role="tablist" aria-label="Sign in or sign up">
-                <Button
-                  variant={mode === "login" ? "secondary" : "ghost"}
-                  className="flex-1 shadow-none"
-                  size="sm"
-                  asChild
-                >
-                  <Link href="/auth" aria-current={mode === "login" ? "page" : undefined}>
+                <Button variant={mode === "login" ? "secondary" : "ghost"} className="flex-1 shadow-none" size="sm" asChild>
+                  <Link href={loginHref} aria-current={mode === "login" ? "page" : undefined}>
                     Sign in
                   </Link>
                 </Button>
-                <Button
-                  variant={mode === "signup" ? "secondary" : "ghost"}
-                  className="flex-1 shadow-none"
-                  size="sm"
-                  asChild
-                >
-                  <Link href="/auth?mode=signup" aria-current={mode === "signup" ? "page" : undefined}>
+                <Button variant={mode === "signup" ? "secondary" : "ghost"} className="flex-1 shadow-none" size="sm" asChild>
+                  <Link href={signupHref} aria-current={mode === "signup" ? "page" : undefined}>
                     Sign up
                   </Link>
                 </Button>
               </div>
             </div>
 
-            <AuthForm mode={mode} action={mode === "login" ? signIn : signUp} />
+            <AuthForm
+              mode={mode}
+              action={mode === "login" ? signIn : signUp}
+              redirectPath={redirectPath}
+              loginHref={loginHref}
+              signupHref={signupHref}
+            />
           </div>
         </section>
       </main>

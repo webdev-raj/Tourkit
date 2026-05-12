@@ -21,7 +21,7 @@ function SubmitButton({ children }) {
   )
 }
 
-export function AuthForm({ mode, action }) {
+export function AuthForm({ mode, action, redirectPath = '/dashboard', loginHref, signupHref }) {
   const [state, formAction] = useActionState(action, { error: null, message: null })
   const [showPassword, setShowPassword] = useState(false)
 
@@ -58,6 +58,7 @@ export function AuthForm({ mode, action }) {
         ) : null}
 
         <form action={formAction} className="flex flex-col gap-4">
+          <input type="hidden" name="redirect" value={redirectPath} />
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -107,7 +108,7 @@ export function AuthForm({ mode, action }) {
         </span>
         <Link
           className="text-sm font-medium text-primary underline-offset-4 hover:text-primary/90 hover:underline"
-          href={isLogin ? '/auth?mode=signup' : '/auth'}
+          href={isLogin ? signupHref : loginHref}
         >
           {isLogin ? 'Sign up' : 'Sign in'}
         </Link>

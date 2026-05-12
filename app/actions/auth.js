@@ -24,6 +24,14 @@ function formatAuthUserMessage(error) {
   return error?.message || 'Something went wrong. Try again.'
 }
 
+function redirectTargetFromForm(formData) {
+  const raw = formData.get('redirect')
+  if (typeof raw !== 'string') return '/dashboard'
+  const s = raw.trim()
+  if (!s.startsWith('/') || s.startsWith('//')) return '/dashboard'
+  return s
+}
+
 export async function signIn(prevState, formData) {
   const supabase = await createClient()
 
@@ -35,7 +43,7 @@ export async function signIn(prevState, formData) {
   if (error) return { error: formatAuthUserMessage(error) }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect(redirectTargetFromForm(formData))
 }
 
 export async function signUp(prevState, formData) {
@@ -52,7 +60,7 @@ export async function signUp(prevState, formData) {
   if (!data.session) return { message: 'Check your email to confirm your account.' }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect(redirectTargetFromForm(formData))
 }
 
 export async function signOut() {
