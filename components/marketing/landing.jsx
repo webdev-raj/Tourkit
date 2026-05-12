@@ -44,6 +44,9 @@ export function LandingPage() {
           </Link>
           <nav className="flex items-center gap-2" aria-label="Marketing">
             <Button variant="ghost" size="sm" asChild>
+              <Link href="/pricing">Pricing</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
               <Link href="/auth">Sign in</Link>
             </Button>
             <Button size="sm" asChild>
@@ -157,6 +160,9 @@ export function LandingPage() {
           <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-6">
             <span className="tabular-nums">© {new Date().getFullYear()} TourKit</span>
             <div className="flex flex-wrap gap-4">
+              <Link href="/pricing" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">
+                Pricing
+              </Link>
               <Link href="/auth" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">
                 Sign in
               </Link>

@@ -49,18 +49,32 @@ create table if not exists analytics_events (
   created_at timestamptz default now()
 );
 
+-- User billing plans
+create table if not exists user_plans (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade unique,
+  plan text default 'free',
+  lemon_squeezy_customer_id text,
+  lemon_squeezy_subscription_id text,
+  subscription_status text default 'inactive',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- Helpful indexes
 create index if not exists projects_user_id_idx on projects(user_id);
 create index if not exists projects_script_key_idx on projects(script_key);
 create index if not exists tours_project_id_idx on tours(project_id);
 create index if not exists steps_tour_id_order_idx on steps(tour_id, step_order);
 create index if not exists analytics_events_project_id_created_at_idx on analytics_events(project_id, created_at desc);
+create index if not exists user_plans_user_id_idx on user_plans(user_id);
 
 -- Row Level Security
 alter table projects enable row level security;
 alter table tours enable row level security;
 alter table steps enable row level security;
 alter table analytics_events enable row level security;
+alter table user_plans enable row level security;
 
 -- Projects: owners can do everything
 drop policy if exists "Users own their projects" on projects;
@@ -108,4 +122,10 @@ create policy "Users can read analytics events" on analytics_events
   using (
     project_id in (select id from projects where user_id = auth.uid())
   );
+
+-- User plans: users can read their own row.
+drop policy if exists "Users can read own plan" on user_plans;
+create policy "Users can read own plan" on user_plans
+  for select
+  using (auth.uid() = user_id);
 

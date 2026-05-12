@@ -1,8 +1,11 @@
 import { createProject } from '@/app/actions/projects'
+import { getUserPlan } from '@/app/actions/billing'
 import { ProjectCreateForm } from '@/components/dashboard/project-create-form'
 import { ProjectsCards, EmptyProjectsState } from '@/components/dashboard/projects-cards'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Projects — TourKit',
@@ -12,6 +15,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function DashboardProjectsPage() {
   const supabase = await createClient()
+  const { plan } = await getUserPlan()
 
   const { data: projects, error } = await supabase
     .from('projects')
@@ -89,13 +93,25 @@ export default async function DashboardProjectsPage() {
 
   const totalProjects = enhancedProjects.length
   const totalActiveTours = toursSafe.filter((t) => t.is_active).length
+  const showFreeLimitBanner = plan === 'free' && totalProjects >= 1
+
+  const planBadgeClass =
+    plan === 'pro'
+      ? 'border-[#F15025]/50 bg-[#F15025]/15 text-[#F15025]'
+      : plan === 'starter'
+        ? 'border-blue-400/40 bg-blue-400/10 text-blue-300'
+        : 'border-white/15 bg-background/40 text-muted-foreground'
+  const planBadgeLabel = plan === 'pro' ? 'Pro ✦' : plan === 'starter' ? 'Starter' : 'Free plan'
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border border-white/10 bg-card/20 px-4 py-5 sm:px-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Projects</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">Projects</h1>
+              <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${planBadgeClass}`}>{planBadgeLabel}</span>
+            </div>
             <p className="max-w-xl text-sm text-muted-foreground">
               Manage your websites and onboarding tours.
             </p>
@@ -114,6 +130,20 @@ export default async function DashboardProjectsPage() {
           </div>
         </div>
       </div>
+
+      {showFreeLimitBanner ? (
+        <div className="rounded-xl border border-[#F15025]/25 border-l-4 border-l-[#F15025] bg-[#F15025]/[0.06] px-4 py-4 sm:px-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">You&apos;ve reached your free plan limit</p>
+              <p className="mt-1 text-xs text-muted-foreground">Upgrade to Starter to add up to 3 projects</p>
+            </div>
+            <Button asChild size="sm" className="bg-[#F15025] text-white hover:bg-[#F15025]/90">
+              <Link href="/pricing">Upgrade now →</Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,22rem)] lg:items-start">
         <div className="min-w-0">

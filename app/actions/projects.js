@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
+import { getUserPlan } from '@/app/actions/billing'
 import { createClient } from '@/lib/supabase/server'
 
 function formatProjectError(error) {
@@ -37,6 +38,33 @@ export async function createProject(prevState, formData) {
 
   if (!name) return { error: 'Project name is required.' }
   if (!domain) return { error: 'Domain is required.' }
+
+  const limits = {
+    free: 1,
+    starter: 3,
+    pro: Infinity,
+  }
+
+  const { count, error: countError } = await supabase
+    .from('projects')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  if (countError) return { error: formatProjectError(countError) }
+
+  const { plan } = await getUserPlan()
+  const limit = limits[plan] ?? 1
+  const projectCount = Number(count ?? 0)
+
+  if (projectCount >= limit) {
+    return {
+      ok: false,
+      error:
+        plan === 'free'
+          ? 'Free plan is limited to 1 project. Upgrade to create more.'
+          : 'You have reached your project limit. Upgrade to Pro for unlimited projects.',
+    }
+  }
 
   const { data: project, error: projectError } = await supabase
     .from('projects')
