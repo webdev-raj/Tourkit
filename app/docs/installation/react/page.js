@@ -7,14 +7,18 @@ const OPTION_A_HTML = `<!-- In public/index.html, paste before </body> -->
 
 ${TOURKIT_SCRIPT_SNIPPET}`
 
-const OPTION_B_USEEFFECT = `useEffect(() => {
+const OPTION_B_USEEFFECT = `const TOURKIT_SCRIPT_ID = 'tourkit-sdk'
+const TOURKIT_SRC = 'https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@main/sdk/dist/tourkit.min.js?v=3'
+
+useEffect(() => {
+  if (document.getElementById(TOURKIT_SCRIPT_ID)) return
   const script = document.createElement('script')
-  script.src = 'https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@main/sdk/dist/tourkit.min.js?v=2'
+  script.id = TOURKIT_SCRIPT_ID
+  script.src = TOURKIT_SRC
   script.setAttribute('data-key', 'YOUR_SCRIPT_KEY')
   script.setAttribute('data-api', 'https://tourkit-phi.vercel.app')
   script.async = true
   document.body.appendChild(script)
-  return () => document.body.removeChild(script)
 }, [])`
 
 export const metadata = {
