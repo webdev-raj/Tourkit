@@ -15,7 +15,8 @@ import {
   PaletteIcon,
   MoonIcon,
   SunIcon,
-  BarChart2Icon
+  BarChart2Icon,
+  Link as LucideLink,
 } from 'lucide-react'
 
 import {
@@ -140,6 +141,7 @@ function normalizeStep(s) {
     ...s,
     title: s.title ?? '',
     position: s.position || 'bottom',
+    url_pattern: s.url_pattern ?? null,
   }
 }
 
@@ -303,6 +305,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
     message: '',
     selector: '',
     position: 'bottom',
+    urlPattern: '',
   })
 
   const [editDraft, setEditDraft] = useState({
@@ -310,6 +313,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
     message: '',
     selector: '',
     position: 'bottom',
+    urlPattern: '',
   })
 
   useEffect(() => {
@@ -319,6 +323,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
         message: selected.message ?? '',
         selector: selected.selector ?? '',
         position: selected.position ?? 'bottom',
+        urlPattern: selected.url_pattern ?? '',
       })
     }
   }, [panelMode, selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -658,13 +663,30 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
                   if (!validateSelector(editDraft.selector)) return
                   setActionError(null)
                   startTransition(async () => {
-                    const result = await updateStep(selected.id, editDraft)
+                    const result = await updateStep(selected.id, {
+                      title: editDraft.title,
+                      message: editDraft.message,
+                      selector: editDraft.selector,
+                      position: editDraft.position,
+                      url_pattern: editDraft.urlPattern?.trim() || null,
+                    })
                     if (result?.error) {
                       setActionError(result.error)
                       return
                     }
                     setSteps((prev) =>
-                      prev.map((s) => (s.id === selected.id ? { ...s, ...editDraft, position: editDraft.position || s.position } : s)),
+                      prev.map((s) =>
+                        s.id === selected.id
+                          ? {
+                              ...s,
+                              title: editDraft.title,
+                              message: editDraft.message,
+                              selector: editDraft.selector,
+                              position: editDraft.position || s.position,
+                              url_pattern: editDraft.urlPattern?.trim() || null,
+                            }
+                          : s,
+                      ),
                     )
                     setPanelMode('add')
                     setSelectedId(null)
@@ -683,7 +705,13 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
                   if (!validateSelector(draft.selector)) return
                   setActionError(null)
                   startTransition(async () => {
-                    const result = await createStep(tour.id, draft)
+                    const result = await createStep(tour.id, {
+                      title: draft.title,
+                      message: draft.message,
+                      selector: draft.selector,
+                      position: draft.position,
+                      url_pattern: draft.urlPattern?.trim() || null,
+                    })
                     if (result?.error) {
                       setActionError(result.error)
                       return
@@ -700,11 +728,12 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
                           title: draft.title,
                           message: draft.message,
                           position: draft.position || 'bottom',
+                          url_pattern: draft.urlPattern?.trim() || null,
                           step_order: nextOrder,
                         },
                       ]
                     })
-                    setDraft({ title: '', message: '', selector: '', position: 'bottom' })
+                    setDraft({ title: '', message: '', selector: '', position: 'bottom', urlPattern: '' })
                     router.refresh()
                   })
                 }}
@@ -786,6 +815,12 @@ const StepCardRow = forwardRef(function StepCardRow(
           {positionPillLabel(step.position)}
         </span>
       </div>
+      {step.url_pattern?.trim() ? (
+        <div className="inline-flex max-w-full items-center gap-1 rounded-md border border-border/50 bg-muted/20 px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
+          <LucideLink className="size-2.5 shrink-0 opacity-80" aria-hidden />
+          <span className="truncate font-mono">{step.url_pattern}</span>
+        </div>
+      ) : null}
     </div>
   )
 })
@@ -892,6 +927,28 @@ function StepFields({ value, onChange, disabled, selectorError, onSelectorBlur }
             {selectorError}
           </p>
         )}
+      </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Label htmlFor="step-url-pattern" className="mb-0">
+            Trigger URL
+          </Label>
+          <span className="rounded border border-border/60 bg-muted/30 px-1.5 py-0 text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">
+            optional
+          </span>
+        </div>
+        <Input
+          id="step-url-pattern"
+          placeholder="/dashboard or /pricing/page"
+          value={value.urlPattern ?? ''}
+          disabled={disabled}
+          spellCheck={false}
+          autoComplete="off"
+          onChange={(e) => onChange({ ...value, urlPattern: e.target.value })}
+        />
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Tour starts from this step when the visitor is on this URL path. Leave empty to always start from step 1.
+        </p>
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="step-position">Position</Label>

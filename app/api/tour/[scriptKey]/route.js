@@ -67,7 +67,7 @@ export async function GET(_request, { params }) {
 
   const { data: steps, error: stepsError } = await supabase
     .from('steps')
-    .select('id, selector, title, message, position, step_order')
+    .select('id, selector, title, message, position, step_order, url_pattern')
     .eq('tour_id', tour.id)
     .order('step_order', { ascending: true })
 

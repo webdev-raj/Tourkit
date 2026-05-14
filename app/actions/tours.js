@@ -158,7 +158,7 @@ export async function getStepsByTourId(tourId) {
 
   const { data: steps, error } = await supabase
     .from('steps')
-    .select('id, tour_id, selector, title, message, position, step_order, created_at')
+    .select('id, tour_id, selector, title, message, position, step_order, url_pattern, created_at')
     .eq('tour_id', tourId)
     .order('step_order', { ascending: true })
 
@@ -171,7 +171,7 @@ export async function getStepsByTourId(tourId) {
 
 /**
  * @param {string} tourId
- * @param {{ title?: string | null, message: string, selector: string, position?: string }} data
+ * @param {{ title?: string | null, message: string, selector: string, position?: string, url_pattern?: string | null }} data
  */
 export async function createStep(tourId, data) {
   const supabase = await createClient()
@@ -189,6 +189,8 @@ export async function createStep(tourId, data) {
   const selector = String(data?.selector ?? '').trim()
   const title = data?.title != null ? String(data.title).trim() : ''
   const position = normalizePosition(data?.position)
+  const urlPatternRaw = data?.url_pattern != null ? String(data.url_pattern).trim() : ''
+  const url_pattern = urlPatternRaw || null
 
   if (!selector) {
     return { error: 'CSS selector is required.' }
@@ -216,6 +218,7 @@ export async function createStep(tourId, data) {
       title: title || null,
       message,
       position,
+      url_pattern,
       step_order: nextOrder,
     })
     .select('id')
@@ -233,7 +236,7 @@ export async function createStep(tourId, data) {
 
 /**
  * @param {string} stepId
- * @param {{ title?: string | null, message: string, selector: string, position?: string }} data
+ * @param {{ title?: string | null, message: string, selector: string, position?: string, url_pattern?: string | null }} data
  */
 export async function updateStep(stepId, data) {
   const supabase = await createClient()
@@ -251,6 +254,8 @@ export async function updateStep(stepId, data) {
   const selector = String(data?.selector ?? '').trim()
   const title = data?.title != null ? String(data.title).trim() : ''
   const position = normalizePosition(data?.position)
+  const urlPatternRaw = data?.url_pattern != null ? String(data.url_pattern).trim() : ''
+  const url_pattern = urlPatternRaw || null
 
   if (!selector) {
     return { error: 'CSS selector is required.' }
@@ -267,6 +272,7 @@ export async function updateStep(stepId, data) {
       title: title || null,
       message,
       position,
+      url_pattern,
     })
     .eq('id', stepId)
 

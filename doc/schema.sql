@@ -36,6 +36,7 @@ create table if not exists steps (
   message text not null,
   position text default 'bottom', -- top | bottom | left | right
   step_order integer not null,
+  url_pattern text default null,
   created_at timestamptz default now()
 );
 
@@ -68,6 +69,9 @@ create index if not exists tours_project_id_idx on tours(project_id);
 create index if not exists steps_tour_id_order_idx on steps(tour_id, step_order);
 create index if not exists analytics_events_project_id_created_at_idx on analytics_events(project_id, created_at desc);
 create index if not exists user_plans_user_id_idx on user_plans(user_id);
+
+-- URL-based step triggers (optional per step)
+alter table steps add column if not exists url_pattern text default null;
 
 -- Row Level Security
 alter table projects enable row level security;
