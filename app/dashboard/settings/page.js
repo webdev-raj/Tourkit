@@ -28,7 +28,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 const CDN_URL =
-  "https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@sdk-v8/sdk/dist/tourkit.min.js"
+  "https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@sdk-v10/sdk/dist/tourkit.min.js
+"
 
 function CodeBlock({ code }) {
   return (
