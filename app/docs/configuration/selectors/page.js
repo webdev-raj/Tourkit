@@ -1,23 +1,18 @@
-import { DocCallout, DocH2, DocLi, DocP, DocSection, DocUl } from '@/components/docs/doc-article'
+import { DocCallout, DocH2, DocH3, DocLi, DocP, DocSection, DocUl } from '@/components/docs/doc-article'
 import { DocHeader } from '@/components/docs/doc-header'
 import CodeBlock from '@/components/docs/code-block'
 
 const SELECTOR_EXAMPLE = `document.querySelector('[data-tour="billing"]')`
 
-const TOURKIT_GLOBAL_API = `// Start tour for a specific path (matches Trigger URL / url_pattern logic)
-window.TourKit.startFor('/dashboard')
+const API_START_FOR_PATH = `window.TourKit.startFor('/dashboard')`
 
-// Start on the current path from step 1 (ignores url_pattern start resolution)
-window.TourKit.start()
+const API_START = `window.TourKit.start()`
 
-// Tear down the active tour UI
-window.TourKit.destroy()
+const API_DESTROY = `window.TourKit.destroy()`
 
-// Clear the "seen" flag for one path so the tour can run again
-window.TourKit.reset('/dashboard')
+const API_RESET = `window.TourKit.reset('/dashboard')`
 
-// Clear every seen flag stored for this script key
-window.TourKit.resetAll()`
+const API_RESET_ALL = `window.TourKit.resetAll()`
 
 export const metadata = {
   title: 'CSS selectors guide',
@@ -34,46 +29,7 @@ export default function Page() {
 
       <DocSection>
         <DocH2>Practical reference</DocH2>
-        <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-white/10 bg-[#0c0c0c]">
-                <th className="px-4 py-3 font-semibold text-foreground">Target</th>
-                <th className="px-4 py-3 font-semibold text-foreground">Selector example</th>
-              </tr>
-            </thead>
-            <tbody className="text-muted-foreground">
-              <tr className="border-b border-white/10">
-                <td className="px-4 py-2.5">Navigation bar</td>
-                <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">nav</td>
-              </tr>
-              <tr className="border-b border-white/10">
-                <td className="px-4 py-2.5">Hero section</td>
-                <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">#hero</td>
-              </tr>
-              <tr className="border-b border-white/10">
-                <td className="px-4 py-2.5">CTA button</td>
-                <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">.cta-button</td>
-              </tr>
-              <tr className="border-b border-white/10">
-                <td className="px-4 py-2.5">Pricing section</td>
-                <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">#pricing</td>
-              </tr>
-              <tr className="border-b border-white/10">
-                <td className="px-4 py-2.5">Footer</td>
-                <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">footer</td>
-              </tr>
-              <tr className="border-b border-white/10">
-                <td className="px-4 py-2.5">Specific button</td>
-                <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">button[data-action=&quot;signup&quot;]</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5">First child</td>
-                <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">main &gt; *:first-child</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <SelectorReferenceTable />
       </DocSection>
 
       <DocSection>
@@ -94,12 +50,6 @@ export default function Page() {
       </DocSection>
 
       <DocSection>
-        <DocH2>TourKit global API</DocH2>
-        <DocP>After installing the script tag, these helpers are available on <code className="text-primary">window.TourKit</code>:</DocP>
-        <CodeBlock code={TOURKIT_GLOBAL_API} language="javascript" />
-      </DocSection>
-
-      <DocSection>
         <DocH2>Try in DevTools</DocH2>
         <CodeBlock code={SELECTOR_EXAMPLE} language="javascript" />
       </DocSection>
@@ -111,6 +61,80 @@ export default function Page() {
       <DocCallout title="Dynamic lists" variant="warning">
         If the target mounts after data loads, ensure the element exists before the tour reaches that step — or reorder steps after async UI settles.
       </DocCallout>
+
+      <DocSection>
+        <DocH2>TourKit Global API</DocH2>
+        <DocP>
+          After installing the script tag, the following methods are available globally on{' '}
+          <code className="text-primary">window.TourKit</code> on any page.
+        </DocP>
+
+        <DocH3>Start tour for specific page</DocH3>
+        <CodeBlock code={API_START_FOR_PATH} language="javascript" />
+
+        <DocH3>Start tour for current page</DocH3>
+        <CodeBlock code={API_START} language="javascript" />
+
+        <DocH3>Destroy active tour</DocH3>
+        <CodeBlock code={API_DESTROY} language="javascript" />
+
+        <DocH3>Reset seen flag for specific path</DocH3>
+        <CodeBlock code={API_RESET} language="javascript" />
+
+        <DocH3>Reset all seen flags for this project</DocH3>
+        <CodeBlock code={API_RESET_ALL} language="javascript" />
+
+        <DocH3>When to use the API</DocH3>
+        <DocP>
+          Use <code className="text-primary">TourKit.startFor()</code> in React and Next.js apps that use client-side routing.
+          Without it, the SDK only runs on initial page load and misses route changes.
+        </DocP>
+      </DocSection>
     </article>
+  )
+}
+
+function SelectorReferenceTable() {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/10">
+      <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
+        <thead>
+          <tr className="border-b border-white/10 bg-[#0c0c0c]">
+            <th className="px-4 py-3 font-semibold text-foreground">Target</th>
+            <th className="px-4 py-3 font-semibold text-foreground">Selector example</th>
+          </tr>
+        </thead>
+        <tbody className="text-muted-foreground">
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5">Navigation bar</td>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">nav</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5">Hero section</td>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">#hero</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5">CTA button</td>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">.cta-button</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5">Pricing section</td>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">#pricing</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5">Footer</td>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">footer</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5">Specific button</td>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">button[data-action=&quot;signup&quot;]</td>
+          </tr>
+          <tr>
+            <td className="px-4 py-2.5">First child</td>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-[#e6e8e6]">main &gt; *:first-child</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   )
 }

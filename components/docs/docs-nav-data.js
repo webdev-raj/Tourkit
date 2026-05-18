@@ -24,6 +24,7 @@ export const DOCS_NAV = [
     items: [
       { title: 'Creating your first tour', href: '/docs/configuration/first-tour' },
       { title: 'Adding steps', href: '/docs/configuration/adding-steps' },
+      { title: 'URL Triggers', href: '/docs/configuration/url-triggers' },
       { title: 'CSS selectors guide', href: '/docs/configuration/selectors' },
       { title: 'Step positioning', href: '/docs/configuration/positioning' },
     ],

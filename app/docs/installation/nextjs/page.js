@@ -9,8 +9,7 @@ export default function Layout({ children }) {
     <>
       {children}
       <Script
-        src="https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@sdk-v10/sdk/dist/tourkit.min.js
-"
+        src="https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@sdk-v10/sdk/dist/tourkit.min.js"
         data-key="YOUR_SCRIPT_KEY"
         data-api="https://tourkit-phi.vercel.app"
         strategy="afterInteractive"
@@ -19,7 +18,8 @@ export default function Layout({ children }) {
   )
 }`
 
-const NEXTJS_APP_ROUTER_TOURKIT_PROVIDER = `'use client'
+const TOURKIT_PROVIDER = `// app/components/TourKitProvider.jsx
+'use client'
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
@@ -34,10 +34,20 @@ export default function TourKitProvider() {
   }, [pathname])
 
   return null
-}
+}`
 
-// Add to your layout.js:
-// <TourKitProvider />`
+const ROOT_LAYOUT = `import TourKitProvider from './components/TourKitProvider'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <TourKitProvider />
+        {children}
+      </body>
+    </html>
+  )
+}`
 
 export const metadata = {
   title: 'Next.js',
@@ -55,8 +65,13 @@ export default function Page() {
       <DocSection>
         <DocH2>App Router</DocH2>
         <DocUl>
-          <DocLi>Add <code className="text-primary">next/script</code> in your root layout so the SDK loads on every page.</DocLi>
-          <DocLi>Keep the script key in an environment variable exposed to the browser (<code className="text-primary">NEXT_PUBLIC_…</code>).</DocLi>
+          <DocLi>
+            Add <code className="text-primary">next/script</code> in your root layout so the SDK loads on every page.
+          </DocLi>
+          <DocLi>
+            Keep the script key in an environment variable exposed to the browser (
+            <code className="text-primary">NEXT_PUBLIC_…</code>).
+          </DocLi>
         </DocUl>
       </DocSection>
 
@@ -66,17 +81,16 @@ export default function Page() {
       </DocSection>
 
       <DocSection>
-        <DocH2>Client-side navigation</DocH2>
-        <DocP>
-          After the script loads, the SDK exposes <code className="text-primary">window.TourKit</code>. On App Router navigations the URL can change
-          without a reload — mount a small client provider that calls <code className="text-primary">startFor</code> whenever the pathname updates.
-        </DocP>
-        <CodeBlock code={NEXTJS_APP_ROUTER_TOURKIT_PROVIDER} language="javascript" />
+        <DocH2>App Router Setup</DocH2>
+        <DocP>Next.js App Router uses client-side navigation. Add a TourKitProvider to your root layout:</DocP>
+        <CodeBlock code={TOURKIT_PROVIDER} language="javascript" />
+        <DocP>Add to your root layout.js:</DocP>
+        <CodeBlock code={ROOT_LAYOUT} language="javascript" />
       </DocSection>
 
       <DocCallout title="Demo route" variant="tip">
-        TourKit ships a demo route pattern you can mirror for staging — pair it with <code className="text-primary">data-demo</code>{' '}
-        attributes when testing analytics isolation.
+        TourKit ships a demo route pattern you can mirror for staging — pair it with{' '}
+        <code className="text-primary">data-demo</code> attributes when testing analytics isolation.
       </DocCallout>
     </article>
   )
