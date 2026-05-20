@@ -15,13 +15,26 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() })
 }
 
+async function resolveShowBranding(supabase, userId) {
+  if (!userId) return true
+
+  const { data: userPlan } = await supabase
+    .from('user_plans')
+    .select('plan')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  const plan = userPlan?.plan || 'free'
+  return plan === 'free'
+}
+
 export async function GET(_request, { params }) {
   const supabase = createAdminClient()
   const { scriptKey } = await params
 
   const { data: project, error: projectError } = await supabase
     .from('projects')
-    .select('id, is_active')
+    .select('id, is_active, user_id')
     .eq('script_key', scriptKey)
     .maybeSingle()
 
@@ -32,6 +45,9 @@ export async function GET(_request, { params }) {
   if (!project || !project.is_active) {
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers: corsHeaders() })
   }
+
+  const showBranding = await resolveShowBranding(supabase, project.user_id)
+  const apiBase = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   const { data: tour, error: tourError } = await supabase
     .from('tours')
@@ -53,7 +69,8 @@ export async function GET(_request, { params }) {
         is_active: true,
         tour: null,
         steps: [],
-        api_base: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        api_base: apiBase,
+        show_branding: showBranding,
         customization: {
           primary_color: '#F15025',
           font_family: 'Inter',
@@ -81,7 +98,8 @@ export async function GET(_request, { params }) {
       is_active: true,
       tour: { id: tour.id, name: tour.name, is_active: tour.is_active },
       steps: steps ?? [],
-      api_base: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      api_base: apiBase,
+      show_branding: showBranding,
       customization: {
         primary_color: tour.primary_color || '#F15025',
         font_family: tour.font_family || 'Inter',

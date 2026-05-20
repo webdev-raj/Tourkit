@@ -92,7 +92,7 @@ export function LandingPage() {
                   translate="no"
                   className="break-all rounded-md bg-muted/80 px-3 py-2 font-mono text-[11px] leading-relaxed text-foreground"
                 >
-                  {`<script src="https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@sdk-v10/sdk/dist/tourkit.min.js
+                  {`<script src="https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@sdk-v11/sdk/dist/tourkit.min.js
 "\n  data-key="YOUR_SCRIPT_KEY"\n  async></script>`}
                 </code>
               </div>
