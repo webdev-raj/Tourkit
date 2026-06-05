@@ -70,3 +70,24 @@ export async function signOut() {
   redirect('/auth')
 }
 
+export async function signInWithGoogle() {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: process.env.NEXT_PUBLIC_APP_URL + '/auth/callback',
+      },
+    })
+
+    if (error) {
+      return { error: error.message }
+    }
+
+    return { url: data.url }
+  } catch (e) {
+    return { error: 'Something went wrong' }
+  }
+}
+

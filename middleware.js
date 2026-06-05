@@ -33,6 +33,10 @@ export async function middleware(request) {
     return response
   }
 
+  if (pathname.startsWith('/auth/callback')) {
+    return response
+  }
+
   if (pathname.startsWith('/dashboard') && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
