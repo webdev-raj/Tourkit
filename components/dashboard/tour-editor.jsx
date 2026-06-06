@@ -116,7 +116,7 @@ function InstallSnippetBlock({ scriptKey }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-tour="install-snippet">
       <div className="flex items-center justify-between gap-2">
         <Label className="text-xs font-medium text-muted-foreground">Install snippet</Label>
         <Button
@@ -423,7 +423,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
                 <Link href={analyticsHref}><BarChart2Icon className="mr-2 size-4" /> View Analytics</Link>
               </Button>
             ) : null}
-            <div className="flex shrink-0 items-center gap-3 rounded-lg border border-border/50 bg-muted/40 px-3 py-2.5">
+            <div className="flex shrink-0 items-center gap-3 rounded-lg border border-border/50 bg-muted/40 px-3 py-2.5" data-tour="tour-toggle">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-medium text-muted-foreground">Tour visible on site</span>
               <span className="text-[0.68rem] text-muted-foreground/90">
@@ -442,7 +442,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
 
         <Separator className="bg-border/60" />
 
-        <div className="rounded-lg border border-border/60 bg-muted/20">
+        <div className="rounded-lg border border-border/60 bg-muted/20" data-tour="appearance">
           <button
             type="button"
             className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
@@ -589,7 +589,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)_minmax(0,22rem)]">
-        <Card className="border-border/80 bg-card/60 backdrop-blur-sm">
+        <Card className="border-border/80 bg-card/60 backdrop-blur-sm" data-tour="tour-steps">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Steps ({steps.length})</CardTitle>
             <CardDescription>Order matches how the tour runs on your site.</CardDescription>
@@ -675,6 +675,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
               onClick={() => setShowAIModal(true)}
               disabled={isPending}
               className="tk-ai-generate-btn"
+              data-tour="ai-generate"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -714,6 +715,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
               variant="outline"
               className="mt-2 w-full border-dashed border-[#F15025]/50 text-[#F15025] hover:bg-[#F15025]/10"
               disabled={isPending}
+              data-tour="add-step"
               onClick={openAddPanel}>
               Add step
             </Button>
@@ -722,7 +724,8 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
 
         <Card
           className="min-w-0 border-border/80 bg-card/60 backdrop-blur-sm"
-          id="tour-editor-right-panel">
+          id="tour-editor-right-panel"
+          data-tour="step-editor">
           <CardHeader className="pb-3">
             {panelMode === 'edit' && selected ? (
               <>
@@ -832,7 +835,7 @@ export function TourEditor({ project, tour, initialSteps, analyticsHref }) {
           </CardContent>
         </Card>
 
-        <Card className="min-w-0 border-border/80 bg-card/60 backdrop-blur-sm lg:col-span-2 xl:col-span-1">
+        <Card className="min-w-0 border-border/80 bg-card/60 backdrop-blur-sm lg:col-span-2 xl:col-span-1" data-tour="tour-preview">
           <CardContent className="pt-4">
             <TourPreview
               title={previewData.title}

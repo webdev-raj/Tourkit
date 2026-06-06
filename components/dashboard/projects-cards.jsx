@@ -141,6 +141,7 @@ function ProjectCard({ project, appUrl, open, onToggle }) {
             <Button asChild className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
               <Link
                 href={`/dashboard/projects/${project.id}`}
+                data-tour="edit-tour"
                 onClick={(e) => {
                   e.stopPropagation()
                 }}>
@@ -158,6 +159,7 @@ function ProjectCard({ project, appUrl, open, onToggle }) {
                 href={`/demo/${project.script_key}`}
                 target="_blank"
                 rel="noreferrer"
+                data-tour="live-demo"
                 onClick={(e) => {
                   e.stopPropagation()
                 }}>
@@ -215,7 +217,7 @@ export function ProjectsCards({ projects, appUrl }) {
   const cards = useMemo(() => projects || [], [projects])
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-tour="projects-list">
       {cards.map((p) => (
         <ProjectCard
           key={p.id}

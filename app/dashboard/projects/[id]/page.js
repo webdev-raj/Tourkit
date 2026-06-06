@@ -91,14 +91,14 @@ async function TourEditorGate({ projectId, deleteError }) {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" asChild>
-          <Link href={`/demo/${project.script_key}`} target="_blank" rel="noreferrer">
+          <Link href={`/demo/${project.script_key}`} target="_blank" rel="noreferrer" data-tour="live-demo">
             <PlayIcon className="mr-2 size-4" />
             Live Demo
           </Link>
         </Button>
 
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/projects/${project.id}/analytics`}>
+          <Link href={`/dashboard/projects/${project.id}/analytics`} data-tour="view-analytics">
             <BarChart2Icon className="mr-2 size-4" />
             View Analytics
           </Link>

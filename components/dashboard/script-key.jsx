@@ -15,7 +15,7 @@ export function ScriptKey({ value }) {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2" data-tour="script-key">
       <code className="min-w-0 flex-1 truncate rounded-md border border-primary/35 bg-muted/80 px-2.5 py-1.5 text-xs tabular-nums text-foreground ring-1 ring-inset ring-primary/20">
         {value}
       </code>

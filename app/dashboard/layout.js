@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation'
+import Script from 'next/script'
 import { Suspense } from 'react'
 import { signOut } from '@/app/actions/auth'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { DashboardBreadcrumb } from '@/components/dashboard/dashboard-breadcrumb'
 import { PasswordUpdatedBanner } from '@/components/dashboard/password-updated-banner'
+import { TourKitProvider } from '@/components/dashboard/tourkit-provider'
 import { UserMenu } from '@/components/dashboard/user-menu'
 import { createClient } from '@/lib/supabase/server'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -22,12 +24,29 @@ export default async function DashboardLayout({ children }) {
 
   if (!user) redirect('/auth')
 
+  const onboardingScriptKey = process.env.NEXT_PUBLIC_TOURKIT_ONBOARDING_SCRIPT_KEY?.trim() || ''
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+
   return (
     <SidebarProvider>
+      {onboardingScriptKey ? (
+        <>
+          <TourKitProvider />
+          <Script
+            id="tourkit-onboarding-sdk"
+            src="https://cdn.jsdelivr.net/gh/webdev-raj/Tourkit@sdk-v12/sdk/dist/tourkit.min.js"
+            data-key={onboardingScriptKey}
+            data-api={appUrl}
+            strategy="afterInteractive"
+          />
+        </>
+      ) : null}
       <AppSidebar userEmail={user.email} onSignOut={signOut} />
       <SidebarInset>
         <div className="flex min-h-dvh min-w-0 flex-col bg-background">
-          <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-background/90 px-4 py-3 backdrop-blur-md sm:px-6">
+          <header
+            className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-background/90 px-4 py-3 backdrop-blur-md sm:px-6"
+            data-tour="dashboard-header">
             <Suspense fallback={<div className="h-5 w-56 rounded-md bg-muted/30" />}>
               <DashboardBreadcrumb />
             </Suspense>

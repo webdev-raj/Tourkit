@@ -58,7 +58,17 @@ export function AppSidebar({ userEmail, onSignOut }) {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-                      <Link href={item.href}>
+                      <Link
+                        href={item.href}
+                        data-tour={
+                          item.href === '/dashboard'
+                            ? 'sidebar-projects'
+                            : item.href === '/docs'
+                              ? 'sidebar-docs'
+                              : item.href === '/dashboard/settings'
+                                ? 'sidebar-settings'
+                                : undefined
+                        }>
                         <Icon />
                         <span>{item.label}</span>
                       </Link>
