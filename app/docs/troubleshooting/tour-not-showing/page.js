@@ -66,6 +66,18 @@ export default function Page() {
             </span>
             <span>Ad blocker is blocking the script</span>
           </li>
+          <li className="flex gap-2">
+            <span className="shrink-0 text-foreground" aria-hidden>
+              □
+            </span>
+            <span>
+              <strong className="font-normal text-foreground">Dynamic URL not matching</strong> — If your URL has IDs
+              like <code className="rounded border border-white/10 bg-[#0c0c0c] px-1.5 py-0.5 text-[#e6e8e6]">/products/123</code>
+              , use <code className="text-primary">[id]</code> syntax in Trigger URL:{' '}
+              <code className="rounded border border-white/10 bg-[#0c0c0c] px-1.5 py-0.5 text-[#e6e8e6]">/products/[id]</code>{' '}
+              not <code className="rounded border border-white/10 bg-[#0c0c0c] px-1.5 py-0.5 text-[#e6e8e6]">/products/123</code>
+            </span>
+          </li>
         </ul>
         <DocImage
           src={null}

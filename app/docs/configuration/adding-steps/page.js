@@ -21,6 +21,11 @@ const WILDCARD_EXAMPLE = `/projects* matches:
 /projects/123
 /projects/123/edit`
 
+const SUPPORTED_URL_PATTERNS = `/dashboard              → exact path only
+/products/[id]          → dynamic segment
+/blog/[category]/[post] → multiple dynamic segments
+/dashboard/*            → all sub-routes`
+
 export const metadata = {
   title: 'Adding steps',
 }
@@ -108,6 +113,14 @@ export default function Page() {
           placeholder="Trigger URL field — Optional URL path input in step editor"
           caption="Setting a Trigger URL for context-aware tours"
         />
+
+        <DocH3>Supported URL patterns</DocH3>
+        <CodeBlock code={SUPPORTED_URL_PATTERNS} language="text" />
+        <DocP>
+          <strong className="text-foreground">Tip:</strong> Use <code className="text-primary">[param]</code> for any
+          dynamic segment like IDs, slugs, or usernames. Use <code className="text-primary">*</code> at the end for
+          matching all sub-routes.
+        </DocP>
       </DocSection>
     </article>
   )

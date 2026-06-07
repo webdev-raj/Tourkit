@@ -21,6 +21,39 @@ const WILDCARD_EXAMPLE = `/projects* matches:
 /projects/123
 /projects/123/edit`
 
+const DYNAMIC_SYNTAX_EXAMPLE = `# Exact match (default)
+/dashboard           → matches /dashboard only
+
+# Dynamic segment
+/products/[id]       → matches /products/123
+                     → matches /products/abc-slug
+                     → does NOT match /products/123/edit
+
+# Nested dynamic
+/blog/[category]/[slug] → matches /blog/tech/my-post
+
+# Wildcard (all sub-routes)
+/dashboard/*         → matches /dashboard/anything
+                     → matches /dashboard/a/b/c`
+
+const SESSION_FLAG_EXAMPLE = `Pattern: /products/[id]
+
+User visits /products/123 → tour runs → flag stored
+User visits /products/456 → flag exists → tour skips
+User visits /products/789 → flag exists → tour skips`
+
+const COMMON_USE_CASES_EXAMPLE = `# SaaS dashboard
+/dashboard/projects/[id]        → project detail page
+/dashboard/projects/[id]/analytics → analytics page
+
+# Blog
+/blog/[slug]                    → any blog post
+/blog/[category]/[slug]         → categorized post
+
+# E-commerce
+/products/[id]                  → any product page
+/shop/[category]/[product]      → category product`
+
 const API_START_FOR_PATH = `window.TourKit.startFor('/dashboard')`
 
 const API_START = `window.TourKit.start()`
@@ -69,6 +102,45 @@ export default function Page() {
           Use <code className="text-primary">*</code> at the end for prefix matching:
         </DocP>
         <CodeBlock code={WILDCARD_EXAMPLE} language="text" />
+
+        <DocH3>Dynamic URL segments</DocH3>
+        <DocP>
+          Use <code className="text-primary">[param]</code> syntax to match dynamic URL segments like IDs, slugs, and
+          other variable path parts.
+        </DocP>
+
+        <DocH3>Syntax</DocH3>
+        <CodeBlock code={DYNAMIC_SYNTAX_EXAMPLE} language="text" />
+
+        <DocH3>Real world examples</DocH3>
+        <DynamicUrlTable />
+
+        <DocH3>Session flag behavior</DocH3>
+        <DocP>
+          When using dynamic segments, TourKit uses the <strong className="text-foreground">pattern</strong> as the
+          session key — not the actual URL.
+        </DocP>
+        <DocP>This means:</DocP>
+        <CodeBlock code={SESSION_FLAG_EXAMPLE} language="text" />
+        <DocP>
+          Tour shows <strong className="text-foreground">once</strong> across all dynamic pages. ✅ This prevents users
+          from seeing the same tour on every product, post, or project page.
+        </DocP>
+
+        <DocH3>Common use cases</DocH3>
+        <CodeBlock code={COMMON_USE_CASES_EXAMPLE} language="text" />
+
+        <DocH3>Matching priority</DocH3>
+        <DocP>When multiple steps have url_patterns, TourKit matches in this order:</DocP>
+        <DocOl>
+          <DocLi>Exact match (<code className="text-primary">/dashboard</code>)</DocLi>
+          <DocLi>
+            Dynamic match (<code className="text-primary">/products/[id]</code>)
+          </DocLi>
+          <DocLi>
+            Wildcard match (<code className="text-primary">/dashboard/*</code>)
+          </DocLi>
+        </DocOl>
       </DocSection>
 
       <DocSection>
@@ -134,6 +206,49 @@ export default function Page() {
         </DocP>
       </DocSection>
     </article>
+  )
+}
+
+function DynamicUrlTable() {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/10">
+      <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
+        <thead>
+          <tr className="border-b border-white/10 bg-[#0c0c0c]">
+            <th className="px-4 py-3 font-semibold text-foreground">Pattern</th>
+            <th className="px-4 py-3 font-semibold text-foreground">Matches</th>
+            <th className="px-4 py-3 font-semibold text-foreground">Does not match</th>
+          </tr>
+        </thead>
+        <tbody className="text-muted-foreground">
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5 font-mono text-[13px] text-foreground">/dashboard</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/dashboard</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/dashboard/projects</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5 font-mono text-[13px] text-foreground">/products/[id]</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/products/123</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/products/123/reviews</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5 font-mono text-[13px] text-foreground">/products/[id]/reviews</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/products/123/reviews</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/products/123</td>
+          </tr>
+          <tr className="border-b border-white/10">
+            <td className="px-4 py-2.5 font-mono text-[13px] text-foreground">/blog/[slug]</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/blog/my-post</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/blog/tech/my-post</td>
+          </tr>
+          <tr>
+            <td className="px-4 py-2.5 font-mono text-[13px] text-foreground">/dashboard/*</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/dashboard/anything</td>
+            <td className="px-4 py-2.5 font-mono text-[13px]">/dashboard</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   )
 }
 
